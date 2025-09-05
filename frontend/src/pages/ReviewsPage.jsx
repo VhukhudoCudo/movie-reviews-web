@@ -1,32 +1,29 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-
-// Create an Axios instance for backend with credentials
-const api = axios.create({
-  baseURL: 'https://movie-reviews-wxai.onrender.com',
-  withCredentials: true, // ✅ send cookies/session
-});
+import api from '../axios'; // Axios instance with withCredentials
 
 export default function ReviewsPage() {
   const [movie, setMovie] = useState('');
   const [review, setReview] = useState('');
   const [reviews, setReviews] = useState([]);
-  const [editing, setEditing] = useState(null); // For editing
+  const [editing, setEditing] = useState(null); // Track review being edited
 
+  // Fetch all reviews from backend
   const fetchReviews = async () => {
     try {
-      const res = await api.get('/reviews'); // ✅ uses instance
+      const res = await api.get('/reviews');
       setReviews(res.data);
     } catch (err) {
       console.error('Failed to fetch reviews:', err.response?.data || err);
     }
   };
 
+  // Add or edit a review
   const addReview = async () => {
     if (!movie || !review) return alert('Please fill in both fields.');
+
     try {
       if (editing) {
-        // Edit review
+        // Edit existing review
         await api.put(`/reviews/${editing._id}`, { movie, review });
         setEditing(null);
       } else {
@@ -41,6 +38,7 @@ export default function ReviewsPage() {
     }
   };
 
+  // Delete a review
   const deleteReview = async (id) => {
     try {
       await api.delete(`/reviews/${id}`);
@@ -50,12 +48,14 @@ export default function ReviewsPage() {
     }
   };
 
+  // Prepare review for editing
   const editReview = (r) => {
     setMovie(r.movie);
     setReview(r.review);
     setEditing(r);
   };
 
+  // Load reviews on component mount
   useEffect(() => {
     fetchReviews();
   }, []);
@@ -64,6 +64,7 @@ export default function ReviewsPage() {
     <div className="min-h-screen p-8 bg-gray-100">
       <div className="max-w-xl mx-auto bg-white p-6 rounded-xl shadow">
         <h1 className="text-2xl font-bold mb-4">Movie Reviews</h1>
+
         <input
           type="text"
           placeholder="Movie Name"
@@ -84,7 +85,11 @@ export default function ReviewsPage() {
           {editing ? 'Edit Review' : 'Add Review'}
         </button>
 
+        {/* Display all reviews */}
         <div>
+          {reviews.length === 0 && (
+            <p className="text-gray-500 text-center">No reviews yet.</p>
+          )}
           {reviews.map((r) => (
             <div key={r._id} className="mb-4 border-b pb-2">
               <p className="font-semibold">{r.movie}</p>
