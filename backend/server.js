@@ -8,37 +8,33 @@ const reviewRoutes = require('./routes/reviews.js');
 
 const app = express();
 
-// ✅ CORS fix (allow credentials + exact frontend URL)
+// ✅ Allow frontend to send cookies
 app.use(cors({
-  origin: 'https://movie-review-f0uj.onrender.com', 
-  credentials: true
+  origin: 'https://movie-review-f0uj.onrender.com', // your frontend domain
+  credentials: true,
 }));
 
 app.use(express.json());
 
-// ✅ Session config
+// ✅ Session config with proper cookie settings
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // true on Render
-    sameSite: 'None' // important for cross-site cookies
+    secure: true,       // true = HTTPS only (Render gives you HTTPS)
+    httpOnly: true,     // prevent JS access to cookie
+    sameSite: 'none'    // allow frontend <-> backend on different domains
   }
 }));
 
-// ✅ DB connection
-mongoose.connect(process.env.MONGO_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+// ✅ MongoDB connection
+mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB error:', err));
 
 app.use('/auth', authRoutes);
 app.use('/reviews', reviewRoutes);
 
-// ✅ Server listen
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

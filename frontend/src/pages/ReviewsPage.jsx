@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-axios.defaults.withCredentials = true;
+// Create an Axios instance for backend with credentials
+const api = axios.create({
+  baseURL: 'https://movie-reviews-wxai.onrender.com',
+  withCredentials: true, // ✅ send cookies/session
+});
 
 export default function ReviewsPage() {
   const [movie, setMovie] = useState('');
@@ -11,11 +15,10 @@ export default function ReviewsPage() {
 
   const fetchReviews = async () => {
     try {
-     const res = await axios.get('https://movie-reviews-wxai.onrender.com/reviews');
-
+      const res = await api.get('/reviews'); // ✅ uses instance
       setReviews(res.data);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch reviews:', err.response?.data || err);
     }
   };
 
@@ -24,36 +27,33 @@ export default function ReviewsPage() {
     try {
       if (editing) {
         // Edit review
-       await axios.put(`https://movie-reviews-wxai.onrender.com/reviews/${editing._id}`, { movie, review });
-
-        setEditing(null); // Reset editing state
+        await api.put(`/reviews/${editing._id}`, { movie, review });
+        setEditing(null);
       } else {
         // Add new review
-        await axios.post('https://movie-reviews-wxai.onrender.com/reviews', { movie, review });
-
+        await api.post('/reviews', { movie, review });
       }
       setMovie('');
       setReview('');
       fetchReviews();
     } catch (err) {
-      alert('Failed to add or edit review');
+      alert(err.response?.data?.message || 'Failed to add or edit review');
     }
   };
 
   const deleteReview = async (id) => {
     try {
-      await axios.delete(`https://movie-reviews-wxai.onrender.com/reviews/${id}`);
-
+      await api.delete(`/reviews/${id}`);
       fetchReviews();
     } catch (err) {
-      alert('Failed to delete review');
+      alert(err.response?.data?.message || 'Failed to delete review');
     }
   };
 
   const editReview = (r) => {
     setMovie(r.movie);
     setReview(r.review);
-    setEditing(r); // Set the review as being edited
+    setEditing(r);
   };
 
   useEffect(() => {

@@ -2,7 +2,11 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-axios.defaults.withCredentials = true;
+// Create an Axios instance for your backend
+const api = axios.create({
+  baseURL: 'https://movie-reviews-wxai.onrender.com',
+  withCredentials: true, // ✅ ensure cookies are sent
+});
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -12,13 +16,14 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `https://movie-reviews-wxai.onrender.com/auth/${mode}`;
+    const url = `/auth/${mode}`; // Axios instance already has baseURL
 
     try {
-      await axios.post(url, { username, password });
-      navigate('/reviews');
+      const response = await api.post(url, { username, password });
+      console.log('Logged in user:', response.data.user); // session info
+      navigate('/reviews'); // redirect after successful login/register
     } catch (err) {
-      alert(err.response.data.message || 'Auth failed');
+      alert(err.response?.data?.message || 'Auth failed');
     }
   };
 
